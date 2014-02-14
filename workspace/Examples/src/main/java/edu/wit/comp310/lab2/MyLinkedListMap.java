@@ -10,7 +10,7 @@ import edu.wit.comp310.lab1.MyLinkedList;
 
 public class MyLinkedListMap<Key extends Comparable<Key>,Value> implements Map<Key,Value>{
 	List<Pair<Key, Value>> list = new MyLinkedList<Pair<Key, Value>>();
-
+	
 	@Override
 	public void clear() {
 		list.clear();
@@ -49,8 +49,7 @@ public class MyLinkedListMap<Key extends Comparable<Key>,Value> implements Map<K
 
 	@Override
 	public boolean isEmpty() {
-		// TODO Auto-generated method stub
-		return false;
+		return list.size() == 0;
 	}
 
 	@Override
