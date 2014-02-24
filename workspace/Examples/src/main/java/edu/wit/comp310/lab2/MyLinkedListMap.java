@@ -28,7 +28,11 @@ public class MyLinkedListMap<Key extends Comparable<Key>,Value> implements Map<K
 
 	@Override
 	public boolean containsValue(Object arg0) {
-		// TODO Auto-generated method stub
+		for (Pair<Key,Value> item : list) {
+			if (item.value.equals(arg0)) {
+				return true;
+			}
+		}
 		return false;
 	}
 
@@ -43,7 +47,15 @@ public class MyLinkedListMap<Key extends Comparable<Key>,Value> implements Map<K
 
 	@Override
 	public Value get(Object arg0) {
-		// TODO Auto-generated method stub
+		if(containsKey(arg0)){
+			for (Pair<Key, Value> item : list){
+				if (item.key.equals(arg0)){
+					return item.value;
+				}
+			}
+		}
+			
+		
 		return null;
 	}
 
@@ -54,38 +66,61 @@ public class MyLinkedListMap<Key extends Comparable<Key>,Value> implements Map<K
 
 	@Override
 	public Set<Key> keySet() {
-		// Return all the keys in your map.
-		return null;
+		Set<Key> Kset = new HashSet<Key>();
+		for (Pair<Key,Value> item : list) {
+				Kset.add(item.key);
+		}
+		return Kset;
 	}
 
 	@Override
 	public Value put(Key arg0, Value arg1) {
-		// TODO Auto-generated method stub
+		Pair<Key, Value> item = new Pair<Key, Value>(arg0, arg1);
+		if (!(containsKey(arg0))){
+		list.add(item);
+		}
+		else {
+			
+		}
 		return null;
 	}
 
 	@Override
 	public void putAll(Map<? extends Key, ? extends Value> arg0) {
-		// TODO Auto-generated method stub
+		for (java.util.Map.Entry<? extends Key,? extends Value> entry : arg0.entrySet() ){
+			put(entry.getKey(), entry.getValue());
+			
+		}
 		
 	}
 
 	@Override
 	public Value remove(Object arg0) {
-		// TODO Auto-generated method stub
-		return null;
+		Value temp = null;
+		if (containsKey(arg0)){
+			for (Pair<Key, Value> item : list){
+				if (item.key.equals(arg0)){
+					temp = item.value;
+					list.remove(item);
+				}
+			}
+		}
+		return temp;
 	}
 
 	@Override
 	public int size() {
-		// TODO Auto-generated method stub
 		return list.size();
 	}
 
 	@Override
 	public Collection<Value> values() {
-		// TODO Auto-generated method stub
-		return null;
+		Collection<Value> Vset = new HashSet<Value>();
+		for (Pair<Key,Value> item : list) {
+				Vset.add(item.value);
+		}
+		return Vset;
+		
 	}
 	
 }
