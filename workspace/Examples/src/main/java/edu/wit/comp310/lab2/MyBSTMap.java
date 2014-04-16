@@ -2,6 +2,7 @@ package edu.wit.comp310.lab2;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -136,6 +137,22 @@ public class MyBSTMap<Key extends Comparable<Key>,Value> implements Map<Key, Val
 			}
 		}
 	}
+	public static class ValueVisit<K extends Comparable<K>, V extends Comparable <V>>
+	implements Visitor <Pair<K, V>> {
+		@Override
+		public void visit(BinaryTreeNode<Pair<K, V>> node) {
+			// Process the node
+			System.out.println(node.data);
+			// Visit the left side
+			if (node.left != null) {
+				node.left.accept(this);
+			}
+			// Visit the right side
+			if (node.right != null) {
+				node.right.accept(this);
+			}
+		}
+	}
 	public static class InfixPrinter implements Visitor<String> {
 		@Override
 		public void visit(BinaryTreeNode<String> node) {
@@ -178,21 +195,48 @@ public class MyBSTMap<Key extends Comparable<Key>,Value> implements Map<Key, Val
 
 	@Override
 	public boolean containsKey(Object arg0) {
-		// TODO Auto-generated method stub
+		Pair<Key, Value> entry = new Pair<Key,Value>((Key)arg0, null);
+		Searcher<Pair<Key,Value>> searcher = new Searcher<Pair<Key,Value>>(entry);
+		root.accept(searcher);
+		if (searcher.found) return true;
 		return false;
 	}
 
 	@Override
 	public boolean containsValue(Object arg0) {
-		// TODO Auto-generated method stub
+		for(Value item : values()){
+			if (item.equals(arg0)){
+				return true;
+			}
+		}
 		return false;
 	}
 
 	@Override
 	public Set<java.util.Map.Entry<Key, Value>> entrySet() {
-		Set<java.util.Map.Entry<Key, Value>> result = new HashSet<java.util.Map.Entry<Key, Value>>();
-		// populate the set with everything in the the tree.
-		return null;
+		SetAdder setadder = new SetAdder();
+		setadder.visit(root);
+		
+		return setadder.result;
+	}
+	
+public static class SetAdder<K extends Comparable<K>, V> implements Visitor<Pair<K, V>> {
+		
+	Set<java.util.Map.Entry<K, V>> result = new HashSet<java.util.Map.Entry<K, V>>();
+		@Override
+		public void visit(BinaryTreeNode<Pair<K, V>> node) {
+			
+			result.add(node.data);
+			
+			if (node.left != null) {
+				node.left.accept(this);
+			}
+			if (node.right != null) {
+				node.right.accept(this);
+			}
+			
+		}
+		
 	}
 
 	@Override
@@ -207,15 +251,39 @@ public class MyBSTMap<Key extends Comparable<Key>,Value> implements Map<Key, Val
 
 	@Override
 	public boolean isEmpty() {
-		// TODO Auto-generated method stub
+		if(size == 0){
+			return true;
+		}
 		return false;
 	}
+	
+	
 
 	@Override
 	public Set<Key> keySet() {
-		Set<Key> set = new HashSet<Key>();
-		// populate the set with every key in the the tree.
-		return null;
+		KeyAdder keyadder = new KeyAdder<Key, Value>();
+		keyadder.visit(root);
+		
+		return keyadder.keys;
+	}
+	
+public static class KeyAdder<K extends Comparable<K>, V> implements Visitor<Pair<K, V>> {
+		
+		Set<K> keys = new HashSet();
+		@Override
+		public void visit(BinaryTreeNode<Pair<K, V>> node) {
+			
+			keys.add(node.data.key);
+			
+			if (node.left != null) {
+				node.left.accept(this);
+			}
+			if (node.right != null) {
+				node.right.accept(this);
+			}
+			
+		}
+		
 	}
 	// At this point, the rebalancing is left to do
 	// Also, I wouldn't be surprised if there were bugs in here
@@ -277,26 +345,100 @@ public class MyBSTMap<Key extends Comparable<Key>,Value> implements Map<Key, Val
 
 	@Override
 	public void putAll(Map<? extends Key, ? extends Value> arg0) {
-		// TODO Auto-generated method stub
-		
+		for(java.util.Map.Entry<? extends Key, ? extends Value> entry : arg0.entrySet()){
+			put(entry.getKey(), entry.getValue());
+		}
 	}
+	
+	// NodeStatus would be a better name.. *Sigh*
+		private static enum NodeStatus {LEFT_CHILD, RIGHT_CHILD, ROOT};
+		private static <T> NodeStatus getChildStatus(BinaryTreeNode<T> node) {
+			if (node.parent == null) {
+				return NodeStatus.ROOT;
+			} else if (node.parent.left == node) {
+				return NodeStatus.LEFT_CHILD;
+			} else {
+				return NodeStatus.RIGHT_CHILD;
+			}
+		};
+		// Are we the leaf node?
+		private static <T> boolean isLeaf(BinaryTreeNode<T> node) {
+			return node.left == null && node.right == null;
+		}
+	
 
 	@Override
-	public Value remove(Object arg0) {
-		// TODO Auto-generated method stub
-		return null;
+		public Value remove(Object key) {
+			Pair<Key,Value> entry = new Pair<Key,Value>((Key) key, null);
+			// Hard!!
+			// use the searcher to find the node.
+			Searcher<Pair<Key,Value>> searcher = new Searcher<Pair<Key,Value>>(entry);
+			root.accept(searcher);
+			// maybe there is no node to remove! huzzah, return null
+			if (searcher.parent == null) return null;
+			switch (getChildStatus(searcher.parent)) {
+			case LEFT_CHILD:
+				break;
+			case RIGHT_CHILD:
+				break;
+			case ROOT:
+				// is it the root?
+				// is the root a leaf?
+				if (isLeaf(searcher.parent)) {
+					root = null;
+				// does the root have no left child?
+				} else if (searcher.parent.left == null) {
+					root = searcher.parent.right;
+				// does the root have a left child?
+				} else {
+					BinaryTreeNode<Pair<Key,Value>> current;
+					// Go to the greatest node less than the root
+					for (current = searcher.parent.left; current.right != null; current = current.right);
+					// Current is there now
+					root.data = current.data;
+					current.parent.right = current.left;
+				}
+				return searcher.parent.data.value;
+			default:
+				break;
+			
+			}
+			return null;
 	}
+
+	
 
 	// This is a decent size method
 	@Override
 	public int size() {
 		return size;
 	}
+	
+	public static class ValueAdder<K extends Comparable<K>, V> implements Visitor<Pair<K, V>> {
+		
+		Collection<V> values = new LinkedList<V>();
+		@Override
+		public void visit(BinaryTreeNode<Pair<K, V>> node) {
+			
+			values.add(node.data.value);
+			
+			if (node.left != null) {
+				node.left.accept(this);
+			}
+			if (node.right != null) {
+				node.right.accept(this);
+			}
+			
+		}
+		
+	}
 
 	@Override
 	public Collection<Value> values() {
-		// TODO Auto-generated method stub
-		return null;
+		ValueAdder valueadder = new ValueAdder<Key, Value>();
+		valueadder.visit(root);
+		
+		return valueadder.values;
 	}
-
+	
 }
